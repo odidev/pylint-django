@@ -644,25 +644,6 @@ def is_model_view_subclass_method_shouldnt_be_function(node):
     return parent is not None and node_is_subclass(parent, *subclass)
 
 
-def is_model_view_subclass_unused_argument(node):
-    """
-    Checks that node is get or post method of the View class and it has valid arguments.
-
-    TODO: Bad checkings, need to be more smart.
-    """
-    if not is_model_view_subclass_method_shouldnt_be_function(node):
-        return False
-
-    return is_argument_named_request(node)
-
-
-def is_argument_named_request(node):
-    """
-    If an unused-argument is named 'request' ignore that!
-    """
-    return 'request' in node.argnames()
-
-
 def is_model_field_display_method(node):
     """Accept model's fields with get_*_display names."""
     if not node.attrname.endswith('_display'):
@@ -826,10 +807,6 @@ def apply_augmentations(linter):
     # Method could be a function (get, post)
     suppress_message(linter, ClassChecker.leave_functiondef, 'no-self-use',
                      is_model_view_subclass_method_shouldnt_be_function)
-    # Unused argument 'request' (get, post)
-    suppress_message(linter, VariablesChecker.leave_functiondef, 'unused-argument',
-                     is_model_view_subclass_unused_argument)
-    suppress_message(linter, VariablesChecker.leave_functiondef, 'unused-argument', is_argument_named_request)
 
     # django-mptt
     suppress_message(linter, DocStringChecker.visit_classdef, 'missing-docstring', is_model_mpttmeta_subclass)

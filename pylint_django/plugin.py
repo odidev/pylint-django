@@ -1,5 +1,7 @@
 """Common Django module."""
+import re
 from pylint.checkers.base import NameChecker
+from pylint.checkers.variables import VariablesChecker
 from pylint_plugin_utils import get_checker
 
 from pylint_django.checkers import register_checkers
@@ -16,6 +18,17 @@ def load_configuration(linter):
     """
     name_checker = get_checker(linter, NameChecker)
     name_checker.config.good_names += ('qs', 'urlpatterns', 'register', 'app_name', 'handler500')
+
+    # We want to ignore the unused-argument warning for arguments named `request`. The signature of Django view
+    # functions require the request argument but it is okay if the request is not used in the function.
+    # https://github.com/PyCQA/pylint-django/issues/155
+    variables_checker = get_checker(linter, VariablesChecker)
+    old_ignored_argument_names_pattern = variables_checker.config.ignored_argument_names.pattern
+    new_ignored_argument_names_pattern = "request"
+    if old_ignored_argument_names_pattern:
+        new_ignored_argument_names_pattern = old_ignored_argument_names_pattern + "|request"
+
+    variables_checker.config.ignored_argument_names = re.compile(new_ignored_argument_names_pattern)
 
     # we don't care about South migrations
     linter.config.black_list += ('migrations', 'south_migrations')
